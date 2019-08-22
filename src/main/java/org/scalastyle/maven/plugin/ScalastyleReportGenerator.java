@@ -16,9 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 /**
  * Generate a report based on ScalastyleResults.
@@ -207,10 +209,13 @@ public class ScalastyleReportGenerator {
                 }
             });
 
+            Set<String> finishedChecker = new HashSet<String>();
             for(ConfigurationChecker checker :checkers){
-                if(results.violations(RuleUtil.getName(checker.className()))>0){
+                String ruleName=RuleUtil.getName(checker.className());
+                if(results.violations(ruleName)>0 && !finishedChecker.contains(ruleName)){
                     doRuleRow(checker, results, category);
                     category = RuleUtil.getCategory(checker.className());
+                    finishedChecker.add(ruleName);
                 }
             }
         } else {

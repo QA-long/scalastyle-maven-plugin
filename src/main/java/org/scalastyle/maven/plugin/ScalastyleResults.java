@@ -1,8 +1,13 @@
 package org.scalastyle.maven.plugin;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.scalastyle.FileSpec;
 import org.scalastyle.Level;
 import org.scalastyle.Message;
+import org.scalastyle.MessageHelper;
+import org.scalastyle.Output;
+import org.scalastyle.ScalastyleChecker;
 import org.scalastyle.StyleError;
 import org.scalastyle.StyleException;
 
@@ -109,6 +114,8 @@ public class ScalastyleResults {
     }
 
     public void parse(List<Message<FileSpec>> messages) {
+        final scala.Option<ClassLoader> none = scala.Option$.MODULE$.apply(null);
+        ScalastyleChecker<FileSpec> sc = new ScalastyleChecker<FileSpec>(none);
         for (Message<FileSpec> message : messages) {
             if (message instanceof StyleError) {
                 StyleError<FileSpec> msg = (StyleError<FileSpec>) message;
@@ -127,6 +134,10 @@ public class ScalastyleResults {
                 auditEvent.setSourceName(msg.clazz().getName());
                 if (msg.customMessage().isDefined()) {
                     auditEvent.setMessage(msg.customMessage().get());
+                }else{
+                    Config config = ConfigFactory.load(sc.getClass().getClassLoader());
+                    MessageHelper messageHelper = new MessageHelper(config);
+                    auditEvent.setMessage(messageHelper.message(msg.key(), msg.args()));
                 }
                 violations.add(auditEvent);
                 files.put(fileName, violations);
